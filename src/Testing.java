@@ -10,6 +10,7 @@ public class Testing {
         ByteBuffer buffer = ByteBuffer.allocate(20);
         RandomAccessFile random = new RandomAccessFile(new File("Testing/t.a"), "rw");
         FileChannel fc = random.getChannel();
+        buffer.limit(4);
         fc.read(buffer);
         buffer.flip();
         System.out.println(buffer.getInt());

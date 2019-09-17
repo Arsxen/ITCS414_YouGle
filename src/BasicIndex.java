@@ -11,10 +11,31 @@ public class BasicIndex implements BaseIndex {
 		 * TODO: Your code here
 		 *       Read and return the postings list from the given file.
 		 */
+		PostingList postingList = null;
 		int termId;
 		int docFreq;
-		ByteBuffer bb = ByteBuffer.allocate(8);
-		return null;
+		ByteBuffer buffer = ByteBuffer.allocate(8);
+		try {
+			fc.read(buffer);
+			buffer.flip();
+
+			termId = buffer.getInt();
+			docFreq = buffer.getInt();
+
+			buffer = ByteBuffer.allocate(docFreq*4);
+			fc.read(buffer);
+			buffer.flip();
+
+			postingList = new PostingList(termId);
+			for (int i = 0; i < docFreq; i++) {
+				postingList.getList().add(buffer.getInt());
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return postingList;
 	}
 
 	@Override
@@ -24,19 +45,19 @@ public class BasicIndex implements BaseIndex {
 		 *       Write the given postings list to the given file.
 		 */
 		int dataLength = p.getList().size() + 2;
-		ByteBuffer bb = ByteBuffer.allocate(dataLength*4);
+		ByteBuffer buffer = ByteBuffer.allocate(dataLength*4);
 
-		bb.putInt(p.getTermId());
-		bb.putInt(p.getList().size());
+		buffer.putInt(p.getTermId());
+		buffer.putInt(p.getList().size());
 
 		for (Integer docId : p.getList()) {
-			bb.putInt(docId);
+			buffer.putInt(docId);
 		}
 
-		bb.flip();
+		buffer.flip();
 
 		try {
-			fc.write(bb);
+			fc.write(buffer);
 		}
 		catch (IOException e) {
 			e.printStackTrace();
