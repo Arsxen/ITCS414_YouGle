@@ -7,14 +7,12 @@ import java.nio.channels.FileChannel;
 
 public class Testing {
     public static void main(String[] args) throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocate(20);
+        ByteBuffer buffer = ByteBuffer.allocate(4);
         RandomAccessFile random = new RandomAccessFile(new File("Testing/t.a"), "rw");
         FileChannel fc = random.getChannel();
-        buffer.limit(4);
-        fc.read(buffer);
-        buffer.flip();
-        System.out.println(buffer.getInt());
-        System.out.println(buffer.getInt());
-
+        for (int i = 0; i < 3; i++) {
+            System.out.println(fc.read(buffer));
+            buffer.clear();
+        }
     }
 }

@@ -16,19 +16,21 @@ public class BasicIndex implements BaseIndex {
 		int docFreq;
 		ByteBuffer buffer = ByteBuffer.allocate(8);
 		try {
-			fc.read(buffer);
-			buffer.flip();
+			int readStatus = fc.read(buffer);
+			if (readStatus != -1) {
+				buffer.flip();
 
-			termId = buffer.getInt();
-			docFreq = buffer.getInt();
+				termId = buffer.getInt();
+				docFreq = buffer.getInt();
 
-			buffer = ByteBuffer.allocate(docFreq*4);
-			fc.read(buffer);
-			buffer.flip();
+				buffer = ByteBuffer.allocate(docFreq*4);
+				fc.read(buffer);
+				buffer.flip();
 
-			postingList = new PostingList(termId);
-			for (int i = 0; i < docFreq; i++) {
-				postingList.getList().add(buffer.getInt());
+				postingList = new PostingList(termId);
+				for (int i = 0; i < docFreq; i++) {
+					postingList.getList().add(buffer.getInt());
+				}
 			}
 		}
 		catch (IOException e) {
