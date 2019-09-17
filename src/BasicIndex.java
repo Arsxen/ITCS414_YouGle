@@ -11,7 +11,9 @@ public class BasicIndex implements BaseIndex {
 		 * TODO: Your code here
 		 *       Read and return the postings list from the given file.
 		 */
-		
+		int termId;
+		int docFreq;
+		ByteBuffer bb = ByteBuffer.allocate(8);
 		return null;
 	}
 
@@ -21,22 +23,20 @@ public class BasicIndex implements BaseIndex {
 		 * TODO: Your code here
 		 *       Write the given postings list to the given file.
 		 */
-		ByteBuffer buffer = ByteBuffer.allocate(4);
+		int dataLength = p.getList().size() + 2;
+		ByteBuffer bb = ByteBuffer.allocate(dataLength*4);
+
+		bb.putInt(p.getTermId());
+		bb.putInt(p.getList().size());
+
+		for (Integer docId : p.getList()) {
+			bb.putInt(docId);
+		}
+
+		bb.flip();
+
 		try {
-			//Write term id to fc
-			int termId = p.getTermId();
-			buffer.putInt(termId);
-			fc.write(buffer);
-
-			//Write doc freq to fc
-			int docFreq = p.getList().size();
-			buffer.putInt(docFreq);
-
-
-
-			for (Integer docId: p.getList()) {
-
-			}
+			fc.write(bb);
 		}
 		catch (IOException e) {
 			e.printStackTrace();

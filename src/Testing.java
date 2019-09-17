@@ -12,38 +12,16 @@ import java.util.*;
 
 public class Testing {
     public static void main(String[] args) throws IOException {
-//        File h = new File("Testing\\a.a");
-//        RandomAccessFile a = new RandomAccessFile(h, "rw");
-//        FileChannel fc = a.getChannel();
-//        ByteBuffer b = ByteBuffer.allocate(4);
-//        b.putInt(1500);
-//        b.flip();
-//        fc.write(b);
-//        fc.write(b);
-//        Path p = h.toPath();
-//        System.out.println(p);
-//        byte[] bb = Files.readAllBytes(p);
-//        System.out.println(Arrays.toString(bb));
-
-        Set<Pair<Integer, Integer>> a = new TreeSet<>(new Comparator<Pair<Integer, Integer>>() {
-            @Override
-            public int compare(Pair<Integer, Integer> o1, Pair<Integer, Integer> o2) {
-                int firstresult = o1.getFirst().compareTo(o2.getFirst());
-                if (firstresult == 0) {
-                    return o1.getSecond().compareTo(o2.getSecond());
-                }
-                return firstresult;
-            }
-        });
-
-        a.add(new Pair<>(1,2));
-        a.add(new Pair<>(1,5));
-        a.add(new Pair<>(2,2));
-        a.add(new Pair<>(1,1));
-        a.add(new Pair<>(1,2));
-
-        System.out.println(a);
-
-
+        ByteBuffer buffer = ByteBuffer.allocate(20);
+//        buffer.putInt(5);
+//        buffer.putInt(1);
+//        buffer.flip();
+        RandomAccessFile random = new RandomAccessFile(new File("Testing/t.a"), "rw");
+        FileChannel fc = random.getChannel();
+//        fc.write(buffer);
+        fc.read(buffer);
+        buffer.flip();
+        System.out.println(buffer.getInt());
+        System.out.println(buffer.getInt());
     }
 }
