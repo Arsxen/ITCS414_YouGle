@@ -14,6 +14,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Query {
 
@@ -43,9 +45,10 @@ public class Query {
 		/*
 		 * TODO: Your code here
 		 */
+
 		return null;
 	}
-	
+
 	
 	public void runQueryService(String indexMode, String indexDirname) throws IOException
 	{
@@ -115,8 +118,15 @@ public class Query {
 		 *       return the list of IDs of the documents that match the query
 		 *      
 		 */
+		List<Integer> listId = new ArrayList<Integer>();
+
+		String[] listWords = query.split(" (and|or) ");
+		for (String word: listWords){
+			int getTermDict = termDict.get(word);
+		}
+
 		return null;
-		
+
 	}
 	
     String outputQueryResult(List<Integer> res) {
