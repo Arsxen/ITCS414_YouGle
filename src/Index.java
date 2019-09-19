@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,7 +42,6 @@ public class Index {
 	// Index
 	private static BaseIndex index = null;
 
-	
 	/* 
 	 * Write a posting list to the given file 
 	 * You should record the file position of this posting list
@@ -55,6 +55,7 @@ public class Index {
 		 *	 
 		 */
 		postingDict.get(posting.getTermId()).setFirst(fc.position());
+		postingDict.get(posting.getTermId()).setSecond(posting.getList().size());
 		index.writePosting(fc, posting);
 	}
 	
@@ -71,9 +72,7 @@ public class Index {
             return null;
         }
     }
-	
-    
-   
+
 	
 	/**
 	 * Main method to start the indexing process.
@@ -114,7 +113,7 @@ public class Index {
 		/*	TODO: delete all the files/sub folder under outdir
 		 * 
 		 */
-		Files.walkFileTree(outdir.toPath(), new SimpleFileVisitor<>() {
+		Files.walkFileTree(outdir.toPath(), new SimpleFileVisitor<Path>() {
 			@Override
 			public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
 				if (!dir.equals(outdir.toPath()))
@@ -212,7 +211,6 @@ public class Index {
 			}
 			
 			RandomAccessFile bfc = new RandomAccessFile(blockFile, "rw");
-			
 			/*
 			 * TODO: Your code here
 			 *       Write all posting lists for all terms to file (bfc) 
@@ -267,36 +265,38 @@ public class Index {
 			FileChannel bf1FC = bf1.getChannel();
 			FileChannel bf2FC = bf2.getChannel();
 			FileChannel mfFC = mf.getChannel();
-
 			PostingList bf1PostingList = index.readPosting(bf1FC);
 			PostingList bf2PostingList = index.readPosting(bf2FC);
 			while (bf1PostingList != null || bf2PostingList != null) {
-                PostingList writePosting;
+                PostingList toWritePosting;
 			    if (bf1PostingList != null && bf2PostingList != null) {
                     if (bf1PostingList.getTermId() == bf2PostingList.getTermId()) {
-                        Set<Integer> docIDs = new LinkedHashSet<>(bf1PostingList.getList());
+                        Set<Integer> docIDs = new TreeSet<>(bf1PostingList.getList());
                         docIDs.addAll(bf2PostingList.getList());
-                        writePosting = new PostingList(bf1PostingList.getTermId());
-                        writePosting.getList().addAll(docIDs);
+                        toWritePosting = new PostingList(bf1PostingList.getTermId());
+                        toWritePosting.getList().addAll(docIDs);
+						bf1PostingList = index.readPosting(bf1FC);
+						bf2PostingList = index.readPosting(bf2FC);
                     }
                     else if (bf1PostingList.getTermId() < bf2PostingList.getTermId()) {
-                        writePosting = bf1PostingList;
+                        toWritePosting = bf1PostingList;
+                        bf1PostingList = index.readPosting(bf1FC);
                     }
                     else {
-                        writePosting = bf2PostingList;
+                        toWritePosting = bf2PostingList;
+                        bf2PostingList = index.readPosting(bf2FC);
                     }
-                    bf1PostingList = index.readPosting(bf1FC);
-                    bf2PostingList = index.readPosting(bf2FC);
+
                 }
 			    else if (bf1PostingList == null) {
-			    	writePosting = bf2PostingList;
+			    	toWritePosting = bf2PostingList;
 					bf2PostingList = index.readPosting(bf2FC);
                 }
 			    else {
-			    	writePosting = bf1PostingList;
+			    	toWritePosting = bf1PostingList;
 					bf1PostingList = index.readPosting(bf1FC);
                 }
-			    index.writePosting(mfFC, writePosting);
+			    writePosting(mfFC, toWritePosting);
              }
 			
 			bf1.close();
@@ -332,7 +332,7 @@ public class Index {
 					+ "\t" + postingDict.get(termId).getSecond() + "\n");
 		}
 		postWriter.close();
-		
+
 		return totalFileCount;
 	}
 
