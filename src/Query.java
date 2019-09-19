@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.Vector;
 
 public class Query {
 
@@ -155,8 +156,28 @@ public class Query {
 		 * no results found
 		 * 
          * */
+    	String result = "";
     	
-    	return null;
+    	if(res == null) { //If there no matched document, output: return "no results found"
+    		result = "no results found\n";
+    		return result;
+    	}
+    	else {
+    		List<String> outputs = new Vector<String>(res.size());
+    		
+    		for (Integer docId : res) {
+    			outputs.add(docDict.get(docId));
+    		}
+    			
+    		Collections.sort(outputs);
+    		for (String eachOutput : outputs) {
+    			System.out.println(eachOutput);
+    			result = "\n" + eachOutput + "\n";
+    		}
+    	
+    	}
+    	
+    	return result;
     }
 	
 	public static void main(String[] args) throws IOException {
