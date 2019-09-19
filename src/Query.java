@@ -115,7 +115,25 @@ public class Query {
 		 *       return the list of IDs of the documents that match the query
 		 *      
 		 */
-		return null;
+	
+	    String [] queryAfterSplit = query.split(" ");
+	    ArrayList <PostingList> resultList = new ArrayList<>();
+	    FileChannel filechannel= indexFile.getChannel();
+	    
+	    for(String q : queryAfterSplit){
+	    	if(termDict.get(q) == null) {
+	    		System.out.println("NULL : the query not found");
+	    	}
+	    	else { //termDict.get(q) != null
+	    		resultList.add(readPosting(filechannel, termDict.get(q)));
+	    	}
+	    }
+	   
+	    //After got a list, we do the intersection
+	    List<Integer> afterIntersectionList = new ArrayList<>();
+	    
+	    
+		return afterIntersectionList; //
 		
 	}
 	
