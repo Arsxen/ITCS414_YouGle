@@ -163,7 +163,7 @@ public class Query {
     		return result;
     	}
     	else {
-    		List<String> outputs = new Vector<String>(res.size());
+    		List<String> outputs = new ArrayList<String>(res.size());
     		
     		for (Integer docId : res) {
     			outputs.add(docDict.get(docId));
