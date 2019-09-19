@@ -160,7 +160,6 @@ public class Query {
     	
     	if(res == null) { //If there no matched document, output: return "no results found"
     		result = "no results found\n";
-    		return result;
     	}
     	else {
     		List<String> outputs = new ArrayList<String>(res.size());
