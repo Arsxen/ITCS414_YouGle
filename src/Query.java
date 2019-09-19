@@ -44,9 +44,12 @@ public class Query {
 		/*
 		 * TODO: Your code here
 		 */
-		return null;
+		long position = posDict.get(termId);
+		fc.position(position);
+		
+		return index.readPosting(fc);
 	}
-	
+
 	
 	public void runQueryService(String indexMode, String indexDirname) throws IOException
 	{
