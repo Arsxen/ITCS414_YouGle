@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -156,14 +155,13 @@ public class Index {
 			Set<Pair<Integer, Integer>> termAndDocPairs = new TreeSet<>(new Comparator<Pair<Integer, Integer>>() {
 				@Override
 				public int compare(Pair<Integer, Integer> o1, Pair<Integer, Integer> o2) {
-					int firstresult = o1.getFirst().compareTo(o2.getFirst());
-					if (firstresult == 0) {
-						return o1.getSecond().compareTo(o2.getSecond());
+					int res = Integer.compare(o1.getFirst(), o2.getFirst());
+					if (res == 0) {
+						res = Integer.compare(o1.getSecond(), o2.getSecond());
 					}
-					return firstresult;
+					return res;
 				}
 			});
-
 			/* For each file */
 			for (File file : filelist) {
 				++totalFileCount;
@@ -197,8 +195,7 @@ public class Index {
 							postingDict.put(curTermId, new Pair<>(-1L, 0));
 						}
 
-						termAndDocPairs.add(new Pair<>(curTermId, docId));
-
+						termAndDocPairs.add(new Pair<Integer, Integer>(curTermId, docId));
 					}
 				}
 				reader.close();
@@ -217,7 +214,7 @@ public class Index {
 			 */
 
 			PostingList postingList = null;
-			for (Pair<Integer, Integer> pair: termAndDocPairs) {
+			for (Pair<Integer, Integer>pair: termAndDocPairs) {
 				if (postingList == null) {
 					postingList = new PostingList(pair.getFirst());
 				}
@@ -363,4 +360,8 @@ public class Index {
 		runIndexer(className, root, output);
 	}
 
+	/*Method for convenient*/
+//	public static void groupAndSortPairs(Collection<Integer> collection) {
+//
+//	}
 }

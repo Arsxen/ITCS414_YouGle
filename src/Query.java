@@ -43,7 +43,10 @@ public class Query {
 		/*
 		 * TODO: Your code here
 		 */
-		return null;
+        long position = posDict.get(termId);
+        fc.position(position);
+
+        return index.readPosting(fc);
 	}
 	
 	
@@ -115,8 +118,35 @@ public class Query {
 		 *       return the list of IDs of the documents that match the query
 		 *      
 		 */
-		return null;
-		
+		String querys[] = query.split("\\s+");
+        List<List<Integer>> docIds = new ArrayList<>();
+        for (String q: querys) {
+            if (termDict.containsKey(q)) {
+                int termId = termDict.get(q);
+                PostingList p = readPosting(indexFile.getChannel(), termId);
+                docIds.add(p.getList());
+            }
+        }
+        Collections.sort(docIds, new Comparator<List<Integer>>() {
+            @Override
+            public int compare(List<Integer> o1, List<Integer> o2) {
+                return Integer.compare(o1.size(),o2.size());
+            }
+        });
+        List<Integer> result;
+        if (docIds.size() == 1) {
+            result = docIds.get(0);
+        }
+        else if (docIds.size() > 1) {
+            result = intersect(docIds.get(0).iterator(), docIds.get(1).iterator());
+            for (int i = 2; i < docIds.size(); i++) {
+                result = intersect(result.iterator(), docIds.get(i).iterator());
+            }
+        }
+        else {
+            result = new ArrayList<Integer>();
+        }
+		return result;
 	}
 	
     String outputQueryResult(List<Integer> res) {
@@ -137,8 +167,25 @@ public class Query {
 		 * no results found
 		 * 
          * */
-    	
-    	return null;
+        StringBuilder result = new StringBuilder();
+
+        if(res.size() == 0) { //If there no matched document, output: return "no results found"
+            result.append("no results found");
+        }
+        else {
+            ArrayList<String> outputs = new ArrayList<String>(res.size());
+
+            for (Integer docId : res) {
+                outputs.add(docDict.get(docId));
+            }
+
+            Collections.sort(outputs);
+            for (String output : outputs) {
+                result.append(output).append("\n");
+            }
+        }
+
+        return result.toString();
     }
 	
 	public static void main(String[] args) throws IOException {
@@ -185,4 +232,43 @@ public class Query {
 			e.printStackTrace();
 		}
 	}
+
+    /**
+     * Intersect two sorted integer collections
+     * @param iter1 Iterator of first collection
+     * @param iter2 Iterator of second collection
+     * @return intersection result
+     */
+	private List<Integer> intersect(Iterator<Integer> iter1, Iterator<Integer> iter2) {
+        List<Integer> result = new ArrayList<>();
+        Integer p1 = popNextOrNull(iter1);
+        Integer p2 = popNextOrNull(iter2);
+        while(p1 != null && p2 != null) {
+            if (p1.equals(p2)) {
+                result.add(p1);
+                p1 = popNextOrNull(iter1);
+                p2 = popNextOrNull(iter2);
+            }
+            else if (p1.compareTo(p2) < 0) {
+                p1 = popNextOrNull(iter1);
+            }
+            else {
+                p2 = popNextOrNull(iter2);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Pop next element if there is one, otherwise return null
+     * @param iter an iterator that contains integers
+     * @return next element or null
+     */
+    private static Integer popNextOrNull(Iterator<Integer> iter) {
+        if (iter.hasNext()) {
+            return iter.next();
+        } else {
+            return null;
+        }
+    }
 }
