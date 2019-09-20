@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -263,8 +264,40 @@ public class Index {
 			 *       the two blocks (based on term ID, perhaps?).
 			 *       
 			 */
-			
-			
+			FileChannel bf1FC = bf1.getChannel();
+			FileChannel bf2FC = bf2.getChannel();
+			FileChannel mfFC = mf.getChannel();
+
+			PostingList bf1PostingList = index.readPosting(bf1FC);
+			PostingList bf2PostingList = index.readPosting(bf2FC);
+			while (bf1PostingList != null || bf2PostingList != null) {
+                PostingList writePosting;
+			    if (bf1PostingList != null && bf2PostingList != null) {
+                    if (bf1PostingList.getTermId() == bf2PostingList.getTermId()) {
+                        Set<Integer> docIDs = new LinkedHashSet<>(bf1PostingList.getList());
+                        docIDs.addAll(bf2PostingList.getList());
+                        writePosting = new PostingList(bf1PostingList.getTermId());
+                        writePosting.getList().addAll(docIDs);
+                    }
+                    else if (bf1PostingList.getTermId() < bf2PostingList.getTermId()) {
+                        writePosting = bf1PostingList;
+                    }
+                    else {
+                        writePosting = bf2PostingList;
+                    }
+                    bf1PostingList = index.readPosting(bf1FC);
+                    bf2PostingList = index.readPosting(bf2FC);
+                }
+			    else if (bf1PostingList == null) {
+			    	writePosting = bf2PostingList;
+					bf2PostingList = index.readPosting(bf2FC);
+                }
+			    else {
+			    	writePosting = bf1PostingList;
+					bf1PostingList = index.readPosting(bf1FC);
+                }
+			    index.writePosting(mfFC, writePosting);
+             }
 			
 			bf1.close();
 			bf2.close();
