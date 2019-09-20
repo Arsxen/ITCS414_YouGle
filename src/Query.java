@@ -121,21 +121,35 @@ public class Query {
 		 */
 	
 	    String [] queryAfterSplit = query.split(" ");
-	    ArrayList <PostingList> resultList = new ArrayList<>();
+	    ArrayList <List<Integer>> resultList = new ArrayList<>();
 	    FileChannel filechannel= indexFile.getChannel();
 	    
 	    for(String q : queryAfterSplit){
 	    	if(termDict.get(q) == null) {
 	    		System.out.println("NULL : the query not found");
 	    	}
-	    	else { //termDict.get(q) != null
-	    		resultList.add(readPosting(filechannel, termDict.get(q)));
+	    	else {
+	    		resultList.add(readPosting(filechannel, termDict.get(q)).getList());
 	    	}
 	    }
-	   
+	    Collections.sort(resultList, new Comparator<List<Integer>>() {
+			@Override
+			public int compare(List<Integer> o1, List<Integer> o2) {
+				return Integer.compare(o1.size(),o2.size());
+			}
+		});
 	    //After got a list, we do the intersection
 	    List<Integer> afterIntersectionList = new ArrayList<>();
-	    
+
+		for (int i = 0; i < resultList.size() - 1; i++ ){
+			for(int j = 0; j < resultList.get(0).size(); j++){
+				for (int k = i; k < resultList.get(i + 1).size(); k++){
+					if(resultList.get(0).get(j) == resultList.get(i + 1).get(k)){
+						afterIntersectionList.add(resultList.get(0).get(j));
+					}
+				}
+			}
+		}
 	    
 		return afterIntersectionList; //
 		
