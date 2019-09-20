@@ -172,9 +172,9 @@ public class Query {
     		}
     			
     		Collections.sort(outputs);
-    		for (String eachOutput : outputs) {
-    			System.out.println(eachOutput);
-    			result = "\n" + eachOutput + "\n";
+    		for (int i = 0 ; i < outputs.size(); i++) {
+    			System.out.println(outputs.get(i));
+    			result = res.get(i) + "/" + outputs.get(i) + "\n";
     		}
     	
     	}
