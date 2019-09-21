@@ -19,7 +19,7 @@ import java.util.*;
 
 public class Index {
 
-	// Term id -> (position in index file, doc frequency) dictionary
+	// Term id -> (d) dictionary
 	private static Map<Integer, Pair<Long, Integer>> postingDict 
 		= new TreeMap<Integer, Pair<Long, Integer>>();
 	// Doc name -> doc id dictionary
@@ -54,7 +54,6 @@ public class Index {
 		 * TODO: Your code here
 		 *	 
 		 */
-		postingDict.get(posting.getTermId()).setFirst(fc.position());
 		index.writePosting(fc, posting);
 	}
 	
@@ -152,23 +151,9 @@ public class Index {
 			File blockDir = new File(dataDirname, block.getName());
 			File[] filelist = blockDir.listFiles();
 
-<<<<<<< Updated upstream
-			//Set of <term id, doc id>
-			Set<Pair<Integer, Integer>> termAndDocPairs = new TreeSet<>(new Comparator<Pair<Integer, Integer>>() {
-				@Override
-				public int compare(Pair<Integer, Integer> o1, Pair<Integer, Integer> o2) {
-					int firstresult = o1.getFirst().compareTo(o2.getFirst());
-					if (firstresult == 0) {
-						return o1.getSecond().compareTo(o2.getSecond());
-					}
-					return firstresult;
-				}
-			});
-
-=======
 			//Term id -> Set of docId
 			Map<Integer, Set<Integer>> blockPL = new TreeMap<>();
->>>>>>> Stashed changes
+
 			/* For each file */
 			for (File file : filelist) {
 				++totalFileCount;
@@ -198,19 +183,10 @@ public class Index {
 							curTermId = termDict.get(token);
 						}
 
-<<<<<<< Updated upstream
-						if (!postingDict.containsKey(curTermId)) {
-							postingDict.put(curTermId, new Pair<>(-1L, 0));
-						}
-
-						termAndDocPairs.add(new Pair<>(curTermId, docId));
-
-=======
 						if (!blockPL.containsKey(curTermId)) {
-							blockPL.put(curTermId, new HashSet<Integer>());
+							blockPL.put(curTermId, new LinkedHashSet<>());
 						}
 						blockPL.get(curTermId).add(docId);
->>>>>>> Stashed changes
 					}
 				}
 				reader.close();
@@ -228,21 +204,12 @@ public class Index {
 			 * TODO: Your code here
 			 *       Write all posting lists for all terms to file (bfc) 
 			 */
-
-			PostingList postingList = null;
-			for (Pair<Integer, Integer> pair: termAndDocPairs) {
-				if (postingList == null) {
-					postingList = new PostingList(pair.getFirst());
-				}
-				else if (postingList.getTermId() != pair.getFirst()) {
-					postingDict.get(postingList.getTermId()).setSecond(postingList.getList().size());
-					writePosting(bfc.getChannel(), postingList);
-					postingList = new PostingList(pair.getFirst());
-				}
-				postingList.getList().add(pair.getSecond());
+			FileChannel fc = bfc.getChannel();
+			for (Map.Entry<Integer, Set<Integer>> entry : blockPL.entrySet()) {
+				PostingList p = new PostingList(entry.getKey(), new ArrayList<>(entry.getValue()));
+				writePosting(fc, p);
 			}
-			postingDict.get(postingList.getTermId()).setSecond(postingList.getList().size());
-			writePosting(bfc.getChannel(), postingList);
+
 
 			bfc.close();
 		}
@@ -280,16 +247,18 @@ public class Index {
 
 			PostingList bf1PostingList = index.readPosting(bf1FC);
 			PostingList bf2PostingList = index.readPosting(bf2FC);
+			//Merge 2 blocks using merge algorithm of merge sort
 			while (bf1PostingList != null || bf2PostingList != null) {
-                PostingList writePosting;
+                PostingList toWritePosting;
 			    if (bf1PostingList != null && bf2PostingList != null) {
+
+			    	//Merge 2 posting lists if term id are equal.
                     if (bf1PostingList.getTermId() == bf2PostingList.getTermId()) {
-<<<<<<< Updated upstream
-                        Set<Integer> docIDs = new LinkedHashSet<>(bf1PostingList.getList());
-                        docIDs.addAll(bf2PostingList.getList());
-                        writePosting = new PostingList(bf1PostingList.getTermId());
-                        writePosting.getList().addAll(docIDs);
-=======
+                    	/*
+                    	* If doc id in posting list no.1 less than doc id in posting list no.2
+                    	* then add all doc id of posting list no.2 to posting list no.1
+                    	* else add all doc id of posting list no.1 to posting list no.2
+                    	* */
                         if (bf1PostingList.getList().get(0) < bf2PostingList.getList().get(0)) {
                         	bf1PostingList.getList().addAll(bf2PostingList.getList());
                         	toWritePosting = bf1PostingList;
@@ -298,30 +267,41 @@ public class Index {
 							bf2PostingList.getList().addAll(bf1PostingList.getList());
 							toWritePosting = bf2PostingList;
 						}
+                        //Read next posting list of block 1 and block 2
 						bf1PostingList = index.readPosting(bf1FC);
 						bf2PostingList = index.readPosting(bf2FC);
->>>>>>> Stashed changes
                     }
+                    /*
+                    * if term id of posting list no.1 < term id of posting list no.2
+                    * then write posting list no.1 to combined fine and read next posting list of block1
+                    * else write posting list no.2 to combined fine and read next posting list of block2
+                    * */
                     else if (bf1PostingList.getTermId() < bf2PostingList.getTermId()) {
-                        writePosting = bf1PostingList;
+                        toWritePosting = bf1PostingList;
+                        bf1PostingList = index.readPosting(bf1FC);
                     }
                     else {
-                        writePosting = bf2PostingList;
+                        toWritePosting = bf2PostingList;
+                        bf2PostingList = index.readPosting(bf2FC);
                     }
-                    bf1PostingList = index.readPosting(bf1FC);
-                    bf2PostingList = index.readPosting(bf2FC);
                 }
+			    /*
+			    * If there are no posting list left in block1
+			    * then writing all remain posting list of block 2 to combined file
+			    * */
 			    else if (bf1PostingList == null) {
-			    	writePosting = bf2PostingList;
+			    	toWritePosting = bf2PostingList;
 					bf2PostingList = index.readPosting(bf2FC);
                 }
+				/*
+				 * If there are no posting list left in block 2
+				 * then writing all remain posting list of block 1 to combined file
+				 * */
 			    else {
-			    	writePosting = bf1PostingList;
+			    	toWritePosting = bf1PostingList;
 					bf1PostingList = index.readPosting(bf1FC);
                 }
-<<<<<<< Updated upstream
-			    index.writePosting(mfFC, writePosting);
-=======
+			    //Update <position in index file, doc frequency> of postingDict
 				if (!postingDict.containsKey(toWritePosting.getTermId())) {
 					postingDict.put(toWritePosting.getTermId(), new Pair<>(mfFC.position(), toWritePosting.getList().size()));
 				}
@@ -329,8 +309,8 @@ public class Index {
 					postingDict.get(toWritePosting.getTermId()).setFirst(mfFC.position());
 					postingDict.get(toWritePosting.getTermId()).setSecond(toWritePosting.getList().size());
 				}
+				//Write posting list to combined file
 			    writePosting(mfFC, toWritePosting);
->>>>>>> Stashed changes
              }
 			
 			bf1.close();
@@ -367,10 +347,7 @@ public class Index {
 					+ "\t" + postingDict.get(termId).getSecond() + "\n");
 		}
 		postWriter.close();
-<<<<<<< Updated upstream
-		
-=======
->>>>>>> Stashed changes
+
 		return totalFileCount;
 	}
 

@@ -115,10 +115,6 @@ public class Query {
 		 *       return the list of IDs of the documents that match the query
 		 *      
 		 */
-<<<<<<< Updated upstream
-		return null;
-		
-=======
 		String querys[] = query.split("\\s+");
         List<List<Integer>> docIds = new ArrayList<>();
         for (String q: querys) {
@@ -128,7 +124,6 @@ public class Query {
                 docIds.add(p.getList());
             }
         }
-//        Collections.sort(docIds, Comparator.comparingInt(List::size));
 		//Find Index of list that has lowest size
 		int minIndex = 0;
 		for (int i = 1; i < docIds.size(); i++) {
@@ -142,6 +137,7 @@ public class Query {
 			docIds.set(minIndex, docIds.get(0));
 			docIds.set(0, temp);
 		}
+
         List<Integer> result;
         if (docIds.size() == 1) {
             result = docIds.get(0);
@@ -156,7 +152,6 @@ public class Query {
             result = new ArrayList<Integer>();
         }
 		return result;
->>>>>>> Stashed changes
 	}
 	
     String outputQueryResult(List<Integer> res) {
@@ -225,8 +220,6 @@ public class Query {
 			e.printStackTrace();
 		}
 	}
-<<<<<<< Updated upstream
-=======
 
 	/**
 	 * Intersect two sorted integer collections
@@ -266,5 +259,4 @@ public class Query {
 			return null;
 		}
 	}
->>>>>>> Stashed changes
 }
