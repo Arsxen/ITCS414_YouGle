@@ -143,7 +143,6 @@ public class Index {
 		
 		/* BSBI indexing algorithm */
 		File[] dirlist = rootdir.listFiles();
-
 		/* For each block */
 		for (File block : dirlist) {
 			File blockFile = new File(outputDirname, block.getName());
@@ -153,6 +152,7 @@ public class Index {
 			File blockDir = new File(dataDirname, block.getName());
 			File[] filelist = blockDir.listFiles();
 
+<<<<<<< Updated upstream
 			//Set of <term id, doc id>
 			Set<Pair<Integer, Integer>> termAndDocPairs = new TreeSet<>(new Comparator<Pair<Integer, Integer>>() {
 				@Override
@@ -165,6 +165,10 @@ public class Index {
 				}
 			});
 
+=======
+			//Term id -> Set of docId
+			Map<Integer, Set<Integer>> blockPL = new TreeMap<>();
+>>>>>>> Stashed changes
 			/* For each file */
 			for (File file : filelist) {
 				++totalFileCount;
@@ -194,12 +198,19 @@ public class Index {
 							curTermId = termDict.get(token);
 						}
 
+<<<<<<< Updated upstream
 						if (!postingDict.containsKey(curTermId)) {
 							postingDict.put(curTermId, new Pair<>(-1L, 0));
 						}
 
 						termAndDocPairs.add(new Pair<>(curTermId, docId));
 
+=======
+						if (!blockPL.containsKey(curTermId)) {
+							blockPL.put(curTermId, new HashSet<Integer>());
+						}
+						blockPL.get(curTermId).add(docId);
+>>>>>>> Stashed changes
 					}
 				}
 				reader.close();
@@ -235,7 +246,6 @@ public class Index {
 
 			bfc.close();
 		}
-
 		/* Required: output total number of files. */
 		//System.out.println("Total Files Indexed: "+totalFileCount);
 
@@ -274,10 +284,23 @@ public class Index {
                 PostingList writePosting;
 			    if (bf1PostingList != null && bf2PostingList != null) {
                     if (bf1PostingList.getTermId() == bf2PostingList.getTermId()) {
+<<<<<<< Updated upstream
                         Set<Integer> docIDs = new LinkedHashSet<>(bf1PostingList.getList());
                         docIDs.addAll(bf2PostingList.getList());
                         writePosting = new PostingList(bf1PostingList.getTermId());
                         writePosting.getList().addAll(docIDs);
+=======
+                        if (bf1PostingList.getList().get(0) < bf2PostingList.getList().get(0)) {
+                        	bf1PostingList.getList().addAll(bf2PostingList.getList());
+                        	toWritePosting = bf1PostingList;
+						}
+                        else {
+							bf2PostingList.getList().addAll(bf1PostingList.getList());
+							toWritePosting = bf2PostingList;
+						}
+						bf1PostingList = index.readPosting(bf1FC);
+						bf2PostingList = index.readPosting(bf2FC);
+>>>>>>> Stashed changes
                     }
                     else if (bf1PostingList.getTermId() < bf2PostingList.getTermId()) {
                         writePosting = bf1PostingList;
@@ -296,7 +319,18 @@ public class Index {
 			    	writePosting = bf1PostingList;
 					bf1PostingList = index.readPosting(bf1FC);
                 }
+<<<<<<< Updated upstream
 			    index.writePosting(mfFC, writePosting);
+=======
+				if (!postingDict.containsKey(toWritePosting.getTermId())) {
+					postingDict.put(toWritePosting.getTermId(), new Pair<>(mfFC.position(), toWritePosting.getList().size()));
+				}
+				else {
+					postingDict.get(toWritePosting.getTermId()).setFirst(mfFC.position());
+					postingDict.get(toWritePosting.getTermId()).setSecond(toWritePosting.getList().size());
+				}
+			    writePosting(mfFC, toWritePosting);
+>>>>>>> Stashed changes
              }
 			
 			bf1.close();
@@ -306,6 +340,7 @@ public class Index {
 			b2.delete();
 			blockQueue.add(combfile);
 		}
+
 
 		/* Dump constructed index back into file system */
 		File indexFile = blockQueue.removeFirst();
@@ -332,7 +367,10 @@ public class Index {
 					+ "\t" + postingDict.get(termId).getSecond() + "\n");
 		}
 		postWriter.close();
+<<<<<<< Updated upstream
 		
+=======
+>>>>>>> Stashed changes
 		return totalFileCount;
 	}
 

@@ -6,6 +6,7 @@ import java.nio.channels.FileChannel;
 
 
 public class Testing {
+<<<<<<< Updated upstream
     public static void main(String[] args) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(4);
         RandomAccessFile random = new RandomAccessFile(new File("Testing/t.a"), "rw");
@@ -13,6 +14,21 @@ public class Testing {
         for (int i = 0; i < 3; i++) {
             System.out.println(fc.read(buffer));
             buffer.clear();
+=======
+    public static void main(String[] args) throws FileNotFoundException {
+        System.out.println(readCorpus("./index/small/corpus.index"));
+    }
+
+    public static String readCorpus(String pathToCorpusFile) throws FileNotFoundException {
+        BasicIndex index = new BasicIndex();
+        StringBuilder result = new StringBuilder();
+        RandomAccessFile corpus = new RandomAccessFile(new File(pathToCorpusFile), "r");
+        FileChannel fc = corpus.getChannel();
+        result.append("Reading Corpus...\n");
+        PostingList pl;
+        while ((pl = index.readPosting(fc)) != null) {
+            result.append("TermID: ").append(pl.getTermId()).append(" -> ").append(pl.getList()).append("\n");
+>>>>>>> Stashed changes
         }
     }
 }

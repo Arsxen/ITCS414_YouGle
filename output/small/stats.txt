@@ -1,4 +1,9 @@
 Query Test Result: [hello, bye, you, how are you, how are you ?]:
+<<<<<<< Updated upstream
 	Memory Used: 0.341456 MBs
 	Time Used: 0.038 secs
+=======
+	Memory Used: 0.536712 MBs
+	Time Used: 0.043 secs
+>>>>>>> Stashed changes
 	No problem. Have a good day.

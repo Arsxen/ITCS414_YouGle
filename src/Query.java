@@ -115,8 +115,48 @@ public class Query {
 		 *       return the list of IDs of the documents that match the query
 		 *      
 		 */
+<<<<<<< Updated upstream
 		return null;
 		
+=======
+		String querys[] = query.split("\\s+");
+        List<List<Integer>> docIds = new ArrayList<>();
+        for (String q: querys) {
+            if (termDict.containsKey(q)) {
+                int termId = termDict.get(q);
+                PostingList p = readPosting(indexFile.getChannel(), termId);
+                docIds.add(p.getList());
+            }
+        }
+//        Collections.sort(docIds, Comparator.comparingInt(List::size));
+		//Find Index of list that has lowest size
+		int minIndex = 0;
+		for (int i = 1; i < docIds.size(); i++) {
+			if (docIds.get(minIndex).size() > docIds.get(i).size()) {
+				minIndex = i;
+			}
+		}
+		//Swap element at minIndex to first element
+		if (minIndex > 0) {
+			List<Integer> temp = docIds.get(minIndex);
+			docIds.set(minIndex, docIds.get(0));
+			docIds.set(0, temp);
+		}
+        List<Integer> result;
+        if (docIds.size() == 1) {
+            result = docIds.get(0);
+        }
+        else if (docIds.size() > 1) {
+            result = intersect(docIds.get(0).iterator(), docIds.get(1).iterator());
+            for (int i = 2; i < docIds.size(); i++) {
+                result = intersect(result.iterator(), docIds.get(i).iterator());
+            }
+        }
+        else {
+            result = new ArrayList<Integer>();
+        }
+		return result;
+>>>>>>> Stashed changes
 	}
 	
     String outputQueryResult(List<Integer> res) {
@@ -185,4 +225,46 @@ public class Query {
 			e.printStackTrace();
 		}
 	}
+<<<<<<< Updated upstream
+=======
+
+	/**
+	 * Intersect two sorted integer collections
+	 * @param iter1 Iterator of first collection
+	 * @param iter2 Iterator of second collection
+	 * @return intersection result
+	 */
+	private List<Integer> intersect(Iterator<Integer> iter1, Iterator<Integer> iter2) {
+		List<Integer> result = new ArrayList<>();
+		Integer p1 = popNextOrNull(iter1);
+		Integer p2 = popNextOrNull(iter2);
+		while(p1 != null && p2 != null) {
+			if (p1.equals(p2)) {
+				result.add(p1);
+				p1 = popNextOrNull(iter1);
+				p2 = popNextOrNull(iter2);
+			}
+			else if (p1.compareTo(p2) < 0) {
+				p1 = popNextOrNull(iter1);
+			}
+			else {
+				p2 = popNextOrNull(iter2);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Pop next element if there is one, otherwise return null
+	 * @param iter an iterator that contains integers
+	 * @return next element or null
+	 */
+	private static Integer popNextOrNull(Iterator<Integer> iter) {
+		if (iter.hasNext()) {
+			return iter.next();
+		} else {
+			return null;
+		}
+	}
+>>>>>>> Stashed changes
 }
