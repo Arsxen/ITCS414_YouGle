@@ -138,4 +138,6 @@ $RECYCLE.BIN/
 
 # Datasets for project
 datasets/
-index/
+index/large/corpus.index
+index/citeseer/corpus.index
+
