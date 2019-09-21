@@ -172,20 +172,15 @@ public class P1Tester {
 	public static void main(String [] args)
 	{
 		//Test the "small" dataset
-<<<<<<< Updated upstream
-		testIndex("Basic", "./datasets/small", "./index/small");
-//		testQuery("Basic", "./index/small", queriesSmall, "./output/small");
-=======
 		//testIndex("Basic", "./datasets/small", "./index/small");
 		//testQuery("Basic", "./index/small", queriesSmall, "./output/small");
->>>>>>> Stashed changes
 		
 		//Test the "large" dataset
 		//testIndex("Basic", "./datasets/large", "./index/large");
 		//testQuery("Basic", "./index/large", queriesLarge, "./output/large");
 		
 		//Test the "citeseer" dataset
-		testIndex("Basic", "./datasets/citeseer", "./index/citeseer");
-		//testQuery("Basic", "./index/citeseer", queriesCiteseer, "./output/citeseer");
+		//testIndex("Basic", "./datasets/citeseer", "./index/citeseer");
+		testQuery("Basic", "./index/citeseer", queriesCiteseer, "./output/citeseer");
 	}
 }

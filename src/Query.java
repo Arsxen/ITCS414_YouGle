@@ -43,7 +43,10 @@ public class Query {
 		/*
 		 * TODO: Your code here
 		 */
-		return null;
+		long position = posDict.get(termId);
+		fc.position(position);
+
+		return index.readPosting(fc);
 	}
 	
 	
@@ -172,8 +175,26 @@ public class Query {
 		 * no results found
 		 * 
          * */
-    	
-    	return null;
+
+		StringBuilder result = new StringBuilder();
+
+		if(res.size() == 0) { //If there no matched document, output: return "no results found"
+			result.append("no results found");
+		}
+		else {
+			ArrayList<String> outputs = new ArrayList<String>(res.size());
+
+			for (Integer docId : res) {
+				outputs.add(docDict.get(docId));
+			}
+
+			Collections.sort(outputs);
+			for (String output : outputs) {
+				result.append(output).append("\n");
+			}
+		}
+
+		return result.toString();
     }
 	
 	public static void main(String[] args) throws IOException {

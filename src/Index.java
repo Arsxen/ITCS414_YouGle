@@ -184,7 +184,7 @@ public class Index {
 						}
 
 						if (!blockPL.containsKey(curTermId)) {
-							blockPL.put(curTermId, new LinkedHashSet<>());
+							blockPL.put(curTermId, new HashSet<>());
 						}
 						blockPL.get(curTermId).add(docId);
 					}
@@ -207,6 +207,7 @@ public class Index {
 			FileChannel fc = bfc.getChannel();
 			for (Map.Entry<Integer, Set<Integer>> entry : blockPL.entrySet()) {
 				PostingList p = new PostingList(entry.getKey(), new ArrayList<>(entry.getValue()));
+				Collections.sort(p.getList());
 				writePosting(fc, p);
 			}
 
