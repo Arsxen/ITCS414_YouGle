@@ -43,10 +43,10 @@ public class Query {
 		/*
 		 * TODO: Your code here
 		 */
-        long position = posDict.get(termId);
-        fc.position(position);
+		long position = posDict.get(termId);
+		fc.position(position);
 
-        return index.readPosting(fc);
+		return index.readPosting(fc);
 	}
 	
 	
@@ -127,12 +127,20 @@ public class Query {
                 docIds.add(p.getList());
             }
         }
-        Collections.sort(docIds, new Comparator<List<Integer>>() {
-            @Override
-            public int compare(List<Integer> o1, List<Integer> o2) {
-                return Integer.compare(o1.size(),o2.size());
-            }
-        });
+		//Find Index of list that has lowest size
+		int minIndex = 0;
+		for (int i = 1; i < docIds.size(); i++) {
+			if (docIds.get(minIndex).size() > docIds.get(i).size()) {
+				minIndex = i;
+			}
+		}
+		//Swap element at minIndex to first element
+		if (minIndex > 0) {
+			List<Integer> temp = docIds.get(minIndex);
+			docIds.set(minIndex, docIds.get(0));
+			docIds.set(0, temp);
+		}
+
         List<Integer> result;
         if (docIds.size() == 1) {
             result = docIds.get(0);
@@ -167,25 +175,26 @@ public class Query {
 		 * no results found
 		 * 
          * */
-        StringBuilder result = new StringBuilder();
 
-        if(res.size() == 0) { //If there no matched document, output: return "no results found"
-            result.append("no results found");
-        }
-        else {
-            ArrayList<String> outputs = new ArrayList<String>(res.size());
+		StringBuilder result = new StringBuilder();
 
-            for (Integer docId : res) {
-                outputs.add(docDict.get(docId));
-            }
+		if(res.size() == 0) { //If there no matched document, output: return "no results found"
+			result.append("no results found");
+		}
+		else {
+			ArrayList<String> outputs = new ArrayList<String>(res.size());
 
-            Collections.sort(outputs);
-            for (String output : outputs) {
-                result.append(output).append("\n");
-            }
-        }
+			for (Integer docId : res) {
+				outputs.add(docDict.get(docId));
+			}
 
-        return result.toString();
+			Collections.sort(outputs);
+			for (String output : outputs) {
+				result.append(output).append("\n");
+			}
+		}
+
+		return result.toString();
     }
 	
 	public static void main(String[] args) throws IOException {
@@ -233,42 +242,42 @@ public class Query {
 		}
 	}
 
-    /**
-     * Intersect two sorted integer collections
-     * @param iter1 Iterator of first collection
-     * @param iter2 Iterator of second collection
-     * @return intersection result
-     */
+	/**
+	 * Intersect two sorted integer collections
+	 * @param iter1 Iterator of first collection
+	 * @param iter2 Iterator of second collection
+	 * @return intersection result
+	 */
 	private List<Integer> intersect(Iterator<Integer> iter1, Iterator<Integer> iter2) {
-        List<Integer> result = new ArrayList<>();
-        Integer p1 = popNextOrNull(iter1);
-        Integer p2 = popNextOrNull(iter2);
-        while(p1 != null && p2 != null) {
-            if (p1.equals(p2)) {
-                result.add(p1);
-                p1 = popNextOrNull(iter1);
-                p2 = popNextOrNull(iter2);
-            }
-            else if (p1.compareTo(p2) < 0) {
-                p1 = popNextOrNull(iter1);
-            }
-            else {
-                p2 = popNextOrNull(iter2);
-            }
-        }
-        return result;
-    }
+		List<Integer> result = new ArrayList<>();
+		Integer p1 = popNextOrNull(iter1);
+		Integer p2 = popNextOrNull(iter2);
+		while(p1 != null && p2 != null) {
+			if (p1.equals(p2)) {
+				result.add(p1);
+				p1 = popNextOrNull(iter1);
+				p2 = popNextOrNull(iter2);
+			}
+			else if (p1.compareTo(p2) < 0) {
+				p1 = popNextOrNull(iter1);
+			}
+			else {
+				p2 = popNextOrNull(iter2);
+			}
+		}
+		return result;
+	}
 
-    /**
-     * Pop next element if there is one, otherwise return null
-     * @param iter an iterator that contains integers
-     * @return next element or null
-     */
-    private static Integer popNextOrNull(Iterator<Integer> iter) {
-        if (iter.hasNext()) {
-            return iter.next();
-        } else {
-            return null;
-        }
-    }
+	/**
+	 * Pop next element if there is one, otherwise return null
+	 * @param iter an iterator that contains integers
+	 * @return next element or null
+	 */
+	private static Integer popNextOrNull(Iterator<Integer> iter) {
+		if (iter.hasNext()) {
+			return iter.next();
+		} else {
+			return null;
+		}
+	}
 }

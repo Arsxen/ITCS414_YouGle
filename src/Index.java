@@ -19,7 +19,7 @@ import java.util.*;
 
 public class Index {
 
-	// Term id -> (position in index file, doc frequency) dictionary
+	// Term id -> (d) dictionary
 	private static Map<Integer, Pair<Long, Integer>> postingDict 
 		= new TreeMap<Integer, Pair<Long, Integer>>();
 	// Doc name -> doc id dictionary
@@ -41,6 +41,7 @@ public class Index {
 	// Index
 	private static BaseIndex index = null;
 
+	
 	/* 
 	 * Write a posting list to the given file 
 	 * You should record the file position of this posting list
@@ -53,8 +54,6 @@ public class Index {
 		 * TODO: Your code here
 		 *	 
 		 */
-		postingDict.get(posting.getTermId()).setFirst(fc.position());
-		postingDict.get(posting.getTermId()).setSecond(posting.getList().size());
 		index.writePosting(fc, posting);
 	}
 	
@@ -71,7 +70,9 @@ public class Index {
             return null;
         }
     }
-
+	
+    
+   
 	
 	/**
 	 * Main method to start the indexing process.
@@ -112,7 +113,7 @@ public class Index {
 		/*	TODO: delete all the files/sub folder under outdir
 		 * 
 		 */
-		Files.walkFileTree(outdir.toPath(), new SimpleFileVisitor<Path>() {
+		Files.walkFileTree(outdir.toPath(), new SimpleFileVisitor<>() {
 			@Override
 			public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
 				if (!dir.equals(outdir.toPath()))
@@ -141,7 +142,6 @@ public class Index {
 		
 		/* BSBI indexing algorithm */
 		File[] dirlist = rootdir.listFiles();
-
 		/* For each block */
 		for (File block : dirlist) {
 			File blockFile = new File(outputDirname, block.getName());
@@ -151,17 +151,9 @@ public class Index {
 			File blockDir = new File(dataDirname, block.getName());
 			File[] filelist = blockDir.listFiles();
 
-			//Set of <term id, doc id>
-			Set<Pair<Integer, Integer>> termAndDocPairs = new TreeSet<>(new Comparator<Pair<Integer, Integer>>() {
-				@Override
-				public int compare(Pair<Integer, Integer> o1, Pair<Integer, Integer> o2) {
-					int res = Integer.compare(o1.getFirst(), o2.getFirst());
-					if (res == 0) {
-						res = Integer.compare(o1.getSecond(), o2.getSecond());
-					}
-					return res;
-				}
-			});
+			//Term id -> Set of docId
+			Map<Integer, Set<Integer>> blockPL = new TreeMap<>();
+
 			/* For each file */
 			for (File file : filelist) {
 				++totalFileCount;
@@ -191,11 +183,10 @@ public class Index {
 							curTermId = termDict.get(token);
 						}
 
-						if (!postingDict.containsKey(curTermId)) {
-							postingDict.put(curTermId, new Pair<>(-1L, 0));
+						if (!blockPL.containsKey(curTermId)) {
+							blockPL.put(curTermId, new HashSet<>());
 						}
-
-						termAndDocPairs.add(new Pair<Integer, Integer>(curTermId, docId));
+						blockPL.get(curTermId).add(docId);
 					}
 				}
 				reader.close();
@@ -208,29 +199,21 @@ public class Index {
 			}
 			
 			RandomAccessFile bfc = new RandomAccessFile(blockFile, "rw");
+			
 			/*
 			 * TODO: Your code here
 			 *       Write all posting lists for all terms to file (bfc) 
 			 */
-
-			PostingList postingList = null;
-			for (Pair<Integer, Integer>pair: termAndDocPairs) {
-				if (postingList == null) {
-					postingList = new PostingList(pair.getFirst());
-				}
-				else if (postingList.getTermId() != pair.getFirst()) {
-					postingDict.get(postingList.getTermId()).setSecond(postingList.getList().size());
-					writePosting(bfc.getChannel(), postingList);
-					postingList = new PostingList(pair.getFirst());
-				}
-				postingList.getList().add(pair.getSecond());
+			FileChannel fc = bfc.getChannel();
+			for (Map.Entry<Integer, Set<Integer>> entry : blockPL.entrySet()) {
+				PostingList p = new PostingList(entry.getKey(), new ArrayList<>(entry.getValue()));
+				Collections.sort(p.getList());
+				writePosting(fc, p);
 			}
-			postingDict.get(postingList.getTermId()).setSecond(postingList.getList().size());
-			writePosting(bfc.getChannel(), postingList);
+
 
 			bfc.close();
 		}
-
 		/* Required: output total number of files. */
 		//System.out.println("Total Files Indexed: "+totalFileCount);
 
@@ -262,19 +245,38 @@ public class Index {
 			FileChannel bf1FC = bf1.getChannel();
 			FileChannel bf2FC = bf2.getChannel();
 			FileChannel mfFC = mf.getChannel();
+
 			PostingList bf1PostingList = index.readPosting(bf1FC);
 			PostingList bf2PostingList = index.readPosting(bf2FC);
+			//Merge 2 blocks using merge algorithm of merge sort
 			while (bf1PostingList != null || bf2PostingList != null) {
                 PostingList toWritePosting;
 			    if (bf1PostingList != null && bf2PostingList != null) {
+
+			    	//Merge 2 posting lists if term id are equal.
                     if (bf1PostingList.getTermId() == bf2PostingList.getTermId()) {
-                        Set<Integer> docIDs = new TreeSet<>(bf1PostingList.getList());
-                        docIDs.addAll(bf2PostingList.getList());
-                        toWritePosting = new PostingList(bf1PostingList.getTermId());
-                        toWritePosting.getList().addAll(docIDs);
+                    	/*
+                    	* If doc id in posting list no.1 less than doc id in posting list no.2
+                    	* then add all doc id of posting list no.2 to posting list no.1
+                    	* else add all doc id of posting list no.1 to posting list no.2
+                    	* */
+                        if (bf1PostingList.getList().get(0) < bf2PostingList.getList().get(0)) {
+                        	bf1PostingList.getList().addAll(bf2PostingList.getList());
+                        	toWritePosting = bf1PostingList;
+						}
+                        else {
+							bf2PostingList.getList().addAll(bf1PostingList.getList());
+							toWritePosting = bf2PostingList;
+						}
+                        //Read next posting list of block 1 and block 2
 						bf1PostingList = index.readPosting(bf1FC);
 						bf2PostingList = index.readPosting(bf2FC);
                     }
+                    /*
+                    * if term id of posting list no.1 < term id of posting list no.2
+                    * then write posting list no.1 to combined fine and read next posting list of block1
+                    * else write posting list no.2 to combined fine and read next posting list of block2
+                    * */
                     else if (bf1PostingList.getTermId() < bf2PostingList.getTermId()) {
                         toWritePosting = bf1PostingList;
                         bf1PostingList = index.readPosting(bf1FC);
@@ -283,16 +285,32 @@ public class Index {
                         toWritePosting = bf2PostingList;
                         bf2PostingList = index.readPosting(bf2FC);
                     }
-
                 }
+			    /*
+			    * If there are no posting list left in block1
+			    * then writing all remain posting list of block 2 to combined file
+			    * */
 			    else if (bf1PostingList == null) {
 			    	toWritePosting = bf2PostingList;
 					bf2PostingList = index.readPosting(bf2FC);
                 }
+				/*
+				 * If there are no posting list left in block 2
+				 * then writing all remain posting list of block 1 to combined file
+				 * */
 			    else {
 			    	toWritePosting = bf1PostingList;
 					bf1PostingList = index.readPosting(bf1FC);
                 }
+			    //Update <position in index file, doc frequency> of postingDict
+				if (!postingDict.containsKey(toWritePosting.getTermId())) {
+					postingDict.put(toWritePosting.getTermId(), new Pair<>(mfFC.position(), toWritePosting.getList().size()));
+				}
+				else {
+					postingDict.get(toWritePosting.getTermId()).setFirst(mfFC.position());
+					postingDict.get(toWritePosting.getTermId()).setSecond(toWritePosting.getList().size());
+				}
+				//Write posting list to combined file
 			    writePosting(mfFC, toWritePosting);
              }
 			
@@ -303,6 +321,7 @@ public class Index {
 			b2.delete();
 			blockQueue.add(combfile);
 		}
+
 
 		/* Dump constructed index back into file system */
 		File indexFile = blockQueue.removeFirst();
@@ -360,8 +379,4 @@ public class Index {
 		runIndexer(className, root, output);
 	}
 
-	/*Method for convenient*/
-//	public static void groupAndSortPairs(Collection<Integer> collection) {
-//
-//	}
 }
