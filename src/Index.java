@@ -113,7 +113,7 @@ public class Index {
 		/*	TODO: delete all the files/sub folder under outdir
 		 * 
 		 */
-		Files.walkFileTree(outdir.toPath(), new SimpleFileVisitor<>() {
+		Files.walkFileTree(outdir.toPath(), new SimpleFileVisitor<Path>() {
 			@Override
 			public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
 				if (!dir.equals(outdir.toPath()))
