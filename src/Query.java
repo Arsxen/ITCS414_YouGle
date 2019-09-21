@@ -143,6 +143,7 @@ public class Query {
         else {
             result = new ArrayList<Integer>();
         }
+        Collections.sort(result);
 		return result;
 	}
 	

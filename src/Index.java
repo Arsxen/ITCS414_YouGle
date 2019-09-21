@@ -255,19 +255,9 @@ public class Index {
 
 			    	//Merge 2 posting lists if term id are equal.
                     if (bf1PostingList.getTermId() == bf2PostingList.getTermId()) {
-                    	/*
-                    	* If doc id in posting list no.1 less than doc id in posting list no.2
-                    	* then add all doc id of posting list no.2 to posting list no.1
-                    	* else add all doc id of posting list no.1 to posting list no.2
-                    	* */
-                        if (bf1PostingList.getList().get(0) < bf2PostingList.getList().get(0)) {
-                        	bf1PostingList.getList().addAll(bf2PostingList.getList());
-                        	toWritePosting = bf1PostingList;
-						}
-                        else {
-							bf2PostingList.getList().addAll(bf1PostingList.getList());
-							toWritePosting = bf2PostingList;
-						}
+                    	bf1PostingList.getList().addAll(bf2PostingList.getList());
+                        Collections.sort(bf1PostingList.getList());
+                        toWritePosting = bf1PostingList;
                         //Read next posting list of block 1 and block 2
 						bf1PostingList = index.readPosting(bf1FC);
 						bf2PostingList = index.readPosting(bf2FC);
