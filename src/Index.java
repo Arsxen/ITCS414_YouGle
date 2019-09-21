@@ -53,8 +53,8 @@ public class Index {
 		 * TODO: Your code here
 		 *	 
 		 */
-		postingDict.get(posting.getTermId()).setFirst(fc.position());
-		postingDict.get(posting.getTermId()).setSecond(posting.getList().size());
+//		postingDict.get(posting.getTermId()).setFirst(fc.position());
+//		postingDict.get(posting.getTermId()).setSecond(posting.getList().size());
 		index.writePosting(fc, posting);
 	}
 	
@@ -151,17 +151,8 @@ public class Index {
 			File blockDir = new File(dataDirname, block.getName());
 			File[] filelist = blockDir.listFiles();
 
-			//Set of <term id, doc id>
-			Set<Pair<Integer, Integer>> termAndDocPairs = new TreeSet<>(new Comparator<Pair<Integer, Integer>>() {
-				@Override
-				public int compare(Pair<Integer, Integer> o1, Pair<Integer, Integer> o2) {
-					int res = Integer.compare(o1.getFirst(), o2.getFirst());
-					if (res == 0) {
-						res = Integer.compare(o1.getSecond(), o2.getSecond());
-					}
-					return res;
-				}
-			});
+			//Term id -> Set of docId
+			Map<Integer, Set<Integer>> blockPL = new LinkedHashMap<>();
 			/* For each file */
 			for (File file : filelist) {
 				++totalFileCount;
@@ -191,11 +182,13 @@ public class Index {
 							curTermId = termDict.get(token);
 						}
 
-						if (!postingDict.containsKey(curTermId)) {
-							postingDict.put(curTermId, new Pair<>(-1L, 0));
-						}
-
-						termAndDocPairs.add(new Pair<Integer, Integer>(curTermId, docId));
+						if (!blockPL.containsKey(curTermId)) {
+						    blockPL.put(curTermId, new HashSet<Integer>());
+                            blockPL.get(curTermId).add(docId);
+                        }
+						else {
+						    blockPL.get(curTermId).add(docId);
+                        }
 					}
 				}
 				reader.close();
@@ -212,21 +205,12 @@ public class Index {
 			 * TODO: Your code here
 			 *       Write all posting lists for all terms to file (bfc) 
 			 */
-
-			PostingList postingList = null;
-			for (Pair<Integer, Integer>pair: termAndDocPairs) {
-				if (postingList == null) {
-					postingList = new PostingList(pair.getFirst());
-				}
-				else if (postingList.getTermId() != pair.getFirst()) {
-					postingDict.get(postingList.getTermId()).setSecond(postingList.getList().size());
-					writePosting(bfc.getChannel(), postingList);
-					postingList = new PostingList(pair.getFirst());
-				}
-				postingList.getList().add(pair.getSecond());
-			}
-			postingDict.get(postingList.getTermId()).setSecond(postingList.getList().size());
-			writePosting(bfc.getChannel(), postingList);
+            FileChannel fc = bfc.getChannel();
+            //Build Posting List from BlockPL
+            for (Map.Entry<Integer,Set<Integer>> entry : blockPL.entrySet()) {
+                PostingList p = new PostingList(entry.getKey(), new ArrayList<Integer>(entry.getValue()));
+                writePosting(fc, p);
+            }
 
 			bfc.close();
 		}

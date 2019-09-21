@@ -127,20 +127,28 @@ public class Query {
                 docIds.add(p.getList());
             }
         }
-        Collections.sort(docIds, new Comparator<List<Integer>>() {
-            @Override
-            public int compare(List<Integer> o1, List<Integer> o2) {
-                return Integer.compare(o1.size(),o2.size());
-            }
-        });
+//        Collections.sort(docIds, Comparator.comparingInt(List::size));
+		//Find Index of list that has lowest size
+		int minIndex = 0;
+		for (int i = 1; i < docIds.size(); i++) {
+			if (docIds.get(minIndex).size() > docIds.get(i).size()) {
+				minIndex = i;
+			}
+		}
+		//Swap element at minIndex to first element
+		if (minIndex > 0) {
+			List<Integer> temp = docIds.get(minIndex);
+			docIds.set(minIndex, docIds.get(0));
+			docIds.set(0, temp);
+		}
         List<Integer> result;
         if (docIds.size() == 1) {
             result = docIds.get(0);
         }
         else if (docIds.size() > 1) {
-            result = intersect(docIds.get(0).iterator(), docIds.get(1).iterator());
+            result = intersect(docIds.get(0), docIds.get(1));
             for (int i = 2; i < docIds.size(); i++) {
-                result = intersect(result.iterator(), docIds.get(i).iterator());
+                result = intersect(result, docIds.get(i));
             }
         }
         else {
@@ -234,41 +242,29 @@ public class Query {
 	}
 
     /**
-     * Intersect two sorted integer collections
-     * @param iter1 Iterator of first collection
-     * @param iter2 Iterator of second collection
+     * Intersect two sorted integer lists
+     * @param p1 first list
+     * @param p2 second list
      * @return intersection result
      */
-	private List<Integer> intersect(Iterator<Integer> iter1, Iterator<Integer> iter2) {
-        List<Integer> result = new ArrayList<>();
-        Integer p1 = popNextOrNull(iter1);
-        Integer p2 = popNextOrNull(iter2);
-        while(p1 != null && p2 != null) {
-            if (p1.equals(p2)) {
-                result.add(p1);
-                p1 = popNextOrNull(iter1);
-                p2 = popNextOrNull(iter2);
-            }
-            else if (p1.compareTo(p2) < 0) {
-                p1 = popNextOrNull(iter1);
-            }
-            else {
-                p2 = popNextOrNull(iter2);
-            }
-        }
+	private List<Integer> intersect(List<Integer> p1, List<Integer> p2) {
+		int p1Index = 0;
+		int p2Index = 0;
+		int minSize = Math.min(p1.size(), p2.size());
+		List<Integer> result = new ArrayList<Integer>();
+        while (p1Index < minSize || p2Index < minSize) {
+        	if (p1.get(p1Index).equals(p2.get(p2Index))) {
+        		result.add(p1.get(p1Index));
+        		p1Index++;
+        		p2Index++;
+			}
+        	else if (p1.get(p1Index).compareTo(p2.get(p2Index)) < 0) {
+        		p1Index++;
+			}
+        	else {
+        		p2Index++;
+			}
+		}
         return result;
-    }
-
-    /**
-     * Pop next element if there is one, otherwise return null
-     * @param iter an iterator that contains integers
-     * @return next element or null
-     */
-    private static Integer popNextOrNull(Iterator<Integer> iter) {
-        if (iter.hasNext()) {
-            return iter.next();
-        } else {
-            return null;
-        }
     }
 }
