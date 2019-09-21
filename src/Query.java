@@ -118,7 +118,7 @@ public class Query {
 		 *       return the list of IDs of the documents that match the query
 		 *      
 		 */
-		String querys[] = query.split("\\s+");
+		String[] querys = query.split("\\s+");
         List<List<Integer>> docIds = new ArrayList<>();
         for (String q: querys) {
             if (termDict.containsKey(q)) {
@@ -127,19 +127,8 @@ public class Query {
                 docIds.add(p.getList());
             }
         }
-		//Find Index of list that has lowest size
-		int minIndex = 0;
-		for (int i = 1; i < docIds.size(); i++) {
-			if (docIds.get(minIndex).size() > docIds.get(i).size()) {
-				minIndex = i;
-			}
-		}
-		//Swap element at minIndex to first element
-		if (minIndex > 0) {
-			List<Integer> temp = docIds.get(minIndex);
-			docIds.set(minIndex, docIds.get(0));
-			docIds.set(0, temp);
-		}
+
+		Collections.sort(docIds, Comparator.comparingInt(List::size));
 
         List<Integer> result;
         if (docIds.size() == 1) {
