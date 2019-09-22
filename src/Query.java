@@ -1,4 +1,6 @@
-
+//Dechapon Tongmak 6088211 Sec 2
+//Jarupong Pajakgo 6088107 Sec 2
+//Archawat Silachote 6088168 Sec 3
 
 import java.io.BufferedReader;
 import java.io.File;

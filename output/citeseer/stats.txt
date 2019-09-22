@@ -1,4 +1,4 @@
 Query Test Result: [shortest path algorithm, support vector machine, random forest, convolutional neural networks, jesus, mahidol, chulalongkorn, thailand, polar bears penguins tigers, algorithm search engine, innovative product design social media, suppawong, tuarob, suppawong tuarob, suppawong tuarob conrad tucker]:
-	Memory Used: 29.59984 MBs
-	Time Used: 0.422 secs
+	Memory Used: 29.06588 MBs
+	Time Used: 0.425 secs
 	No problem. Have a good day.
